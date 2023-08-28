@@ -43,16 +43,22 @@ public:
             }
         }
 
-        bool valid = test_plan.read_line();
-        assert(valid);
+        if( cycles_until_start==0 ) {
+            bool valid = test_plan.read_line();
+            assert(valid);
 
-        check( test_plan[0], 1, "Read operation where write was expected", address, ret );
-        check( test_plan[2], address, "Read from wrong address", address, ret );
-        check( test_plan[1], ret, "Read wrong value from memory", address, ret );
+            check( test_plan[0], 1, "Write operation where read was expected", address, ret );
+            check( test_plan[2], address, "Read from wrong address", address, ret );
+            check( test_plan[1], ret, "Read wrong value from memory", address, ret );
+        }
 
         return ret;
     }
     virtual void write( c6502 *cpu, Addr address, uint8_t value ) override {
+        check( test_plan[0], 0, "Read operation where write was expected", address, value );
+        check( test_plan[2], address, "Write to wrong address", address, value );
+        check( test_plan[1], value, "Write of wrong value to memory", address, value );
+
         memory[address] = value;
     }
 
