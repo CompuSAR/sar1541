@@ -13,6 +13,7 @@ class TestBus : public Bus {
     ReadMem<8,8,16,4>   test_plan;
     size_t              cycles_until_start = StartGraceCycles;
     bool                cpuInReset = true;
+    size_t              cycle_num = 0;
 
 
 public:
@@ -34,6 +35,7 @@ public:
 
             if( address==0xfffc && !cpuInReset ) {
                 cycles_until_start = 0;
+                cycle_num = 1;
                 std::cout<<"Reset vector read detected\n";
             } else {
                 if( --cycles_until_start == 0 ) {
@@ -44,10 +46,12 @@ public:
         }
 
         if( cycles_until_start==0 ) {
+            std::cout<<std::dec<<cycle_num<<" R: "<<std::hex<<address<<" "<<int(ret)<<"\n";
+            cycle_num++;
             bool valid = test_plan.read_line();
             assert(valid);
 
-            check( test_plan[0], 1, "Write operation where read was expected", address, ret );
+            check( test_plan[0], 1, "Read operation where write was expected", address, ret );
             check( test_plan[2], address, "Read from wrong address", address, ret );
             check( test_plan[1], ret, "Read wrong value from memory", address, ret );
         }
@@ -55,9 +59,15 @@ public:
         return ret;
     }
     virtual void write( c6502 *cpu, Addr address, uint8_t value ) override {
-        check( test_plan[0], 0, "Read operation where write was expected", address, value );
-        check( test_plan[2], address, "Write to wrong address", address, value );
-        check( test_plan[1], value, "Write of wrong value to memory", address, value );
+        std::cout<<std::dec<<cycle_num<<" W: "<<std::hex<<address<<" "<<int(value)<<"\n";
+        cycle_num++;
+
+        bool valid = test_plan.read_line();
+        if( valid ) {
+            check( test_plan[0], 0, "Write operation where read was expected", address, value );
+            check( test_plan[2], address, "Write to wrong address", address, value );
+            check( test_plan[1], value, "Write of wrong value to memory", address, value );
+        }
 
         memory[address] = value;
     }
