@@ -100,6 +100,8 @@ void c6502::handleInstruction() {
     case 0xb5: op_lda( addrmode_zp_x() );                       break;
     case 0xb8: op_clv( addrmode_implicit() );                   break;
     case 0xb9: op_lda( addrmode_abs_y() );                      break;
+    case 0xc8: op_iny( addrmode_implicit() );                   break;
+    case 0xca: op_dex( addrmode_implicit() );                   break;
     case 0xbd: op_lda( addrmode_abs_x() );                      break;
     case 0xd0: op_bne( addrmode_immediate() );                  break;
     case 0xd8: op_cld( addrmode_implicit() );                   break;
@@ -390,6 +392,20 @@ void c6502::op_cli(Addr addr) {
 
 void c6502::op_clv(Addr addr) {
     ccSet( CC::oVerflow, false );
+}
+
+void c6502::op_dex(Addr addr) {
+    regX--;
+
+    ccSet( CC::Negative, regX & 0x80 );
+    ccSet( CC::Zero, regX==0 );
+}
+
+void c6502::op_iny(Addr addr) {
+    regY++;
+
+    ccSet( CC::Negative, regY & 0x80 );
+    ccSet( CC::Zero, regY==0 );
 }
 
 void c6502::op_jmp(Addr addr) {

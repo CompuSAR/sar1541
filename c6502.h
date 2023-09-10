@@ -85,6 +85,8 @@ private:
     void op_cld(Addr addr);
     void op_cli(Addr addr);
     void op_clv(Addr addr);
+    void op_dex(Addr addr);
+    void op_iny(Addr addr);
     void op_jmp(Addr addr);
     void op_jsr(Addr addr);
     void op_lda(Addr addr);
