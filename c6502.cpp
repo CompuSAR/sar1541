@@ -54,20 +54,36 @@ void c6502::handleInstruction() {
     case 0x18: op_clc( addrmode_implicit() );                   break;
     case 0x1e: op_asl( addrmode_abs_x(true) );                  break;
     case 0x20: op_jsr( addrmode_special() );                    break;
+    case 0x21: op_and( addrmode_zp_x_ind() );                   break;
+    case 0x25: op_and( addrmode_zp() );                         break;
     case 0x26: op_rol( addrmode_zp() );                         break;
     case 0x28: op_plp( addrmode_stack() );                      break;
+    case 0x29: op_and( addrmode_immediate() );                  break;
+    case 0x2d: op_and( addrmode_abs() );                        break;
     case 0x2e: op_rol( addrmode_abs() );                        break;
     case 0x30: op_bmi( addrmode_immediate() );                  break;
+    case 0x31: op_and( addrmode_zp_ind_y() );                   break;
+    case 0x35: op_and( addrmode_zp_x() );                       break;
     case 0x38: op_sec( addrmode_implicit() );                   break;
+    case 0x39: op_and( addrmode_abs_y() );                      break;
+    case 0x3d: op_and( addrmode_abs_x() );                      break;
     case 0x40: op_rti( addrmode_stack() );                      break;
     case 0x48: op_pha( addrmode_stack() );                      break;
     case 0x4c: op_jmp( addrmode_abs() );                        break;
     case 0x50: op_bvc( addrmode_immediate() );                  break;
     case 0x58: op_cli( addrmode_implicit() );                   break;
     case 0x60: op_rts( addrmode_stack() );                      break;
+    case 0x61: op_adc( addrmode_zp_x_ind() );                   break;
+    case 0x65: op_adc( addrmode_zp() );                         break;
     case 0x68: op_pla( addrmode_stack() );                      break;
+    case 0x69: op_adc( addrmode_immediate() );                  break;
+    case 0x6d: op_adc( addrmode_abs() );                        break;
     case 0x70: op_bvs( addrmode_immediate() );                  break;
+    case 0x71: op_adc( addrmode_zp_ind_y() );                   break;
+    case 0x75: op_adc( addrmode_zp_x() );                       break;
     case 0x78: op_sei( addrmode_implicit() );                   break;
+    case 0x79: op_adc( addrmode_abs_y() );                      break;
+    case 0x7d: op_adc( addrmode_abs_x() );                      break;
     case 0x85: op_sta( addrmode_zp() );                         break;
     case 0x8a: op_txa( addrmode_implicit() );                   break;
     case 0x8d: op_sta( addrmode_abs() );                        break;
@@ -236,6 +252,24 @@ Addr c6502::addrmode_zp_x() {
     return (addr + regX) & 0xff;
 }
 
+Addr c6502::addrmode_zp_x_ind() {
+    uint8_t zp = read( pc() );
+    advance_pc();
+
+    read(zp);
+    zp += regX;
+    zp &= 0xff;
+
+    Addr addr = read(zp);
+
+    zp++;
+    zp &= 0xff;
+
+    addr |= read(zp) << 8;
+
+    return addr;
+}
+
 void c6502::branch_helper(Addr addr, bool jump) {
     int8_t offset = read(addr);
 
@@ -252,6 +286,31 @@ void c6502::branch_helper(Addr addr, bool jump) {
             regPcH = program_counter >> 8;
         }
     }
+}
+
+void c6502::op_adc(Addr addr) {
+    uint16_t val = read(addr);
+
+    bool sameSign = (val & 0x80) == (regA & 0x80);
+
+    val += regA + (ccGet( CC::Carry ) ? 1 : 0);
+
+    bool stillSameSign = (val & 0x80) == (regA & 0x80);
+
+    ccSet( CC::oVerflow, sameSign && !stillSameSign );
+
+    regA = val;
+
+    ccSet( CC::Zero, regA==0 );
+    ccSet( CC::Carry, val & 0x100 );
+    ccSet( CC::Negative, val & 0x80 );
+}
+
+void c6502::op_and(Addr addr) {
+    regA &= read(addr);
+
+    ccSet( CC::Negative, regA & 0x80 );
+    ccSet( CC::Zero, regA==0 );
 }
 
 void c6502::op_asl(Addr addr) {

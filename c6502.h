@@ -64,10 +64,13 @@ private:
     Addr addrmode_zp();
     Addr addrmode_zp_ind_y();
     Addr addrmode_zp_x();
+    Addr addrmode_zp_x_ind();
     Addr addrmode_special();
 
 
     // Operations
+    void op_adc(Addr addr);
+    void op_and(Addr addr);
     void op_asl(Addr addr);
     void op_aslA();
     void op_bcc(Addr addr);
