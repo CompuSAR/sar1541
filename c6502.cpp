@@ -45,31 +45,51 @@ void c6502::handleInstruction() {
     advance_pc();
 
     switch(current_opcode) {
+    case 0x06: op_asl( addrmode_zp() );                         break;
     case 0x08: op_php( addrmode_stack() );                      break;
+    case 0x0a: op_aslA();                                       break;
+    case 0x0e: op_asl( addrmode_abs() );                        break;
     case 0x10: op_bpl( addrmode_immediate() );                  break;
+    case 0x16: op_asl( addrmode_zp_x() );                       break;
+    case 0x18: op_clc( addrmode_implicit() );                   break;
+    case 0x1e: op_asl( addrmode_abs_x(true) );                  break;
     case 0x20: op_jsr( addrmode_special() );                    break;
     case 0x26: op_rol( addrmode_zp() );                         break;
     case 0x28: op_plp( addrmode_stack() );                      break;
     case 0x2e: op_rol( addrmode_abs() );                        break;
     case 0x30: op_bmi( addrmode_immediate() );                  break;
+    case 0x38: op_sec( addrmode_implicit() );                   break;
     case 0x40: op_rti( addrmode_stack() );                      break;
     case 0x48: op_pha( addrmode_stack() );                      break;
     case 0x4c: op_jmp( addrmode_abs() );                        break;
     case 0x50: op_bvc( addrmode_immediate() );                  break;
+    case 0x58: op_cli( addrmode_implicit() );                   break;
     case 0x60: op_rts( addrmode_stack() );                      break;
     case 0x68: op_pla( addrmode_stack() );                      break;
     case 0x70: op_bvs( addrmode_immediate() );                  break;
+    case 0x78: op_sei( addrmode_implicit() );                   break;
     case 0x85: op_sta( addrmode_zp() );                         break;
+    case 0x8a: op_txa( addrmode_implicit() );                   break;
+    case 0x8d: op_sta( addrmode_abs() );                        break;
     case 0x90: op_bcc( addrmode_immediate() );                  break;
+    case 0x98: op_tya( addrmode_implicit() );                   break;
     case 0x9a: op_txs( addrmode_implicit() );                   break;
+    case 0xa0: op_ldy( addrmode_immediate() );                  break;
     case 0xa2: op_ldx( addrmode_immediate() );                  break;
     case 0xa5: op_lda( addrmode_zp() );                         break;
     case 0xa9: op_lda( addrmode_immediate() );                  break;
     case 0xad: op_lda( addrmode_abs() );                        break;
     case 0xb0: op_bcs( addrmode_immediate() );                  break;
+    case 0xb1: op_lda( addrmode_zp_ind_y() );                   break;
+    case 0xb5: op_lda( addrmode_zp_x() );                       break;
+    case 0xb8: op_clv( addrmode_implicit() );                   break;
+    case 0xb9: op_lda( addrmode_abs_y() );                      break;
+    case 0xbd: op_lda( addrmode_abs_x() );                      break;
     case 0xd0: op_bne( addrmode_immediate() );                  break;
+    case 0xd8: op_cld( addrmode_implicit() );                   break;
     case 0xea: op_nop( addrmode_implicit() );                   break;
     case 0xf0: op_beq( addrmode_immediate() );                  break;
+    case 0xf8: op_sed( addrmode_implicit() );                   break;
     default: std::cerr<<"Unknown command "<<std::hex<<int(current_opcode)<<" at "<<(pc()-1)<<"\n"; abort();
     }
 }
@@ -133,6 +153,34 @@ Addr c6502::addrmode_abs() {
     return res;
 }
 
+Addr c6502::addrmode_abs_x(bool always_waste_cycle) {
+    Addr resL = read( pc() );
+    advance_pc();
+    Addr resH = read( pc() ) << 8;
+    resL += regX;
+    advance_pc();
+
+    if( resL>>8 != 0 || always_waste_cycle ) {
+        read( compose( resH>>8, resL&0xff ) );
+    }
+
+    return resL + resH;
+}
+
+Addr c6502::addrmode_abs_y() {
+    Addr resL = read( pc() );
+    advance_pc();
+    Addr resH = read( pc() ) << 8;
+    resL += regY;
+    advance_pc();
+
+    if( resL>>8 != 0 ) {
+        read( compose( resH>>8, resL&0xff ) );
+    }
+
+    return resL + resH;
+}
+
 Addr c6502::addrmode_immediate() {
     Addr stored_pc = pc();
     advance_pc();
@@ -163,6 +211,31 @@ Addr c6502::addrmode_zp() {
     return addr;
 }
 
+Addr c6502::addrmode_zp_ind_y() {
+    uint8_t addr = read( pc() );
+    advance_pc();
+
+    Addr res_lsb = read(addr);
+
+    res_lsb += regY;
+    Addr res_msb = read( (addr+1) & 0xff );
+
+    if( res_lsb>>8 != 0 ) {
+        read( compose( res_msb, res_lsb&0xff ) );
+    }
+
+    return res_lsb + res_msb*256;
+}
+
+Addr c6502::addrmode_zp_x() {
+    uint8_t addr = read( pc() );
+    advance_pc();
+
+    read(addr);
+
+    return (addr + regX) & 0xff;
+}
+
 void c6502::branch_helper(Addr addr, bool jump) {
     int8_t offset = read(addr);
 
@@ -179,6 +252,36 @@ void c6502::branch_helper(Addr addr, bool jump) {
             regPcH = program_counter >> 8;
         }
     }
+}
+
+void c6502::op_asl(Addr addr) {
+    uint16_t val = read(addr);
+    write(addr, val);
+    val <<= 1;
+
+    ccSet( CC::Carry, val&0x100 );
+
+    val &= 0xff;
+    ccSet( CC::Negative, val&0x80 );
+    ccSet( CC::Zero, val==0 );
+
+    write(addr, val);
+}
+
+void c6502::op_aslA() {
+    read( pc() );
+
+    uint16_t val = regA;
+
+    val<<=1;
+
+    ccSet( CC::Carry, val&0x100 );
+
+    val &= 0xff;
+    ccSet( CC::Negative, val&0x80 );
+    ccSet( CC::Zero, val==0 );
+
+    regA = val;
 }
 
 void c6502::op_bcc(Addr addr) {
@@ -214,6 +317,22 @@ void c6502::op_bvs(Addr addr) {
     branch_helper(addr, ccGet(CC::oVerflow));
 }
 
+void c6502::op_clc(Addr addr) {
+    ccSet( CC::Carry, false );
+}
+
+void c6502::op_cld(Addr addr) {
+    ccSet( CC::Decimal, false );
+}
+
+void c6502::op_cli(Addr addr) {
+    ccSet( CC::IntMask, false );
+}
+
+void c6502::op_clv(Addr addr) {
+    ccSet( CC::oVerflow, false );
+}
+
 void c6502::op_jmp(Addr addr) {
     regPcL = addr & 0xff;
     regPcH = addr >> 8;
@@ -233,10 +352,23 @@ void c6502::op_jsr(Addr addr) {
 
 void c6502::op_lda(Addr addr) {
     regA = read( addr );
+
+    ccSet( CC::Zero, regA==0 );
+    ccSet( CC::Negative, regA & 0x80 );
 }
 
 void c6502::op_ldx(Addr addr) {
     regX = read( addr );
+
+    ccSet( CC::Zero, regX==0 );
+    ccSet( CC::Negative, regX & 0x80 );
+}
+
+void c6502::op_ldy(Addr addr) {
+    regY = read( addr );
+
+    ccSet( CC::Zero, regY==0 );
+    ccSet( CC::Negative, regY & 0x80 );
 }
 
 void c6502::op_nop(Addr addr) {
@@ -304,8 +436,34 @@ void c6502::op_rts(Addr addr) {
     advance_pc();
 }
 
+void c6502::op_sec(Addr addr) {
+    ccSet( CC::Carry, true );
+}
+
+void c6502::op_sed(Addr addr) {
+    ccSet( CC::Decimal, true );
+}
+
+void c6502::op_sei(Addr addr) {
+    ccSet( CC::IntMask, true );
+}
+
 void c6502::op_sta(Addr addr) {
     write( addr, regA );
+}
+
+void c6502::op_txa(Addr addr) {
+    regA = regX;
+
+    ccSet( CC::Zero, regA==0 );
+    ccSet( CC::Negative, regA & 0x80 );
+}
+
+void c6502::op_tya(Addr addr) {
+    regA = regY;
+
+    ccSet( CC::Zero, regA==0 );
+    ccSet( CC::Negative, regA & 0x80 );
 }
 
 void c6502::op_txs(Addr addr) {

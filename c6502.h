@@ -56,14 +56,20 @@ private:
 
     // Address modes
     Addr addrmode_abs();
+    Addr addrmode_abs_x(bool always_waste_cycle = false);
+    Addr addrmode_abs_y();
     Addr addrmode_immediate();
     Addr addrmode_implicit();
     Addr addrmode_stack();
     Addr addrmode_zp();
+    Addr addrmode_zp_ind_y();
+    Addr addrmode_zp_x();
     Addr addrmode_special();
 
 
     // Operations
+    void op_asl(Addr addr);
+    void op_aslA();
     void op_bcc(Addr addr);
     void op_bcs(Addr addr);
     void op_beq(Addr addr);
@@ -72,10 +78,15 @@ private:
     void op_bpl(Addr addr);
     void op_bvc(Addr addr);
     void op_bvs(Addr addr);
+    void op_clc(Addr addr);
+    void op_cld(Addr addr);
+    void op_cli(Addr addr);
+    void op_clv(Addr addr);
     void op_jmp(Addr addr);
     void op_jsr(Addr addr);
     void op_lda(Addr addr);
     void op_ldx(Addr addr);
+    void op_ldy(Addr addr);
     void op_nop(Addr addr);
     void op_pha(Addr addr);
     void op_php(Addr addr);
@@ -84,6 +95,11 @@ private:
     void op_rol(Addr addr);
     void op_rti(Addr addr);
     void op_rts(Addr addr);
+    void op_sec(Addr addr);
+    void op_sed(Addr addr);
+    void op_sei(Addr addr);
     void op_sta(Addr addr);
+    void op_txa(Addr addr);
     void op_txs(Addr addr);
+    void op_tya(Addr addr);
 };
