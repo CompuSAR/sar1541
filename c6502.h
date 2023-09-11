@@ -56,6 +56,7 @@ private:
 
     // Address modes
     Addr addrmode_abs();
+    Addr addrmode_abs_ind();
     Addr addrmode_abs_x(bool always_waste_cycle = false);
     Addr addrmode_abs_y();
     Addr addrmode_immediate();

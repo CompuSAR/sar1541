@@ -101,6 +101,7 @@ void c6502::handleInstruction() {
     case 0x65: op_adc( addrmode_zp() );                         break;
     case 0x68: op_pla( addrmode_stack() );                      break;
     case 0x69: op_adc( addrmode_immediate() );                  break;
+    case 0x6c: op_jmp( addrmode_abs_ind() );                    break;
     case 0x6d: op_adc( addrmode_abs() );                        break;
     case 0x70: op_bvs( addrmode_immediate() );                  break;
     case 0x71: op_adc( addrmode_zp_ind_y() );                   break;
@@ -227,6 +228,18 @@ Addr c6502::addrmode_abs() {
     advance_pc();
     res |= read( pc() ) << 8;
     advance_pc();
+
+    return res;
+}
+
+Addr c6502::addrmode_abs_ind() {
+    uint8_t addrL = read( pc() );
+    advance_pc();
+    uint8_t addrH = read( pc() );
+    advance_pc();
+
+    Addr res = read( compose( addrH, addrL++ ) );
+    res |= read( compose( addrH, addrL ) )<<8;
 
     return res;
 }
