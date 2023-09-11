@@ -85,17 +85,22 @@ void c6502::handleInstruction() {
     case 0x40: op_rti( addrmode_stack() );                      break;
     case 0x41: op_eor( addrmode_zp_x_ind() );                   break;
     case 0x45: op_eor( addrmode_zp() );                         break;
+    case 0x46: op_lsr( addrmode_zp() );                         break;
     case 0x48: op_pha( addrmode_stack() );                      break;
     case 0x49: op_eor( addrmode_immediate() );                  break;
+    case 0x4a: op_lsrA();                                       break;
     case 0x4c: op_jmp( addrmode_abs() );                        break;
     case 0x4d: op_eor( addrmode_abs() );                        break;
+    case 0x4e: op_lsr( addrmode_abs() );                        break;
     case 0x50: op_bvc( addrmode_immediate() );                  break;
     case 0x51: op_eor( addrmode_zp_ind_y() );                   break;
     case 0x52: op_eor( addrmode_zp_ind() );                     break;
     case 0x55: op_eor( addrmode_zp_x() );                       break;
+    case 0x56: op_lsr( addrmode_zp_x() );                       break;
     case 0x58: op_cli( addrmode_implicit() );                   break;
     case 0x59: op_eor( addrmode_abs_y() );                      break;
     case 0x5d: op_eor( addrmode_abs_x() );                      break;
+    case 0x5e: op_lsr( addrmode_abs_x() );                      break;
     case 0x60: op_rts( addrmode_stack() );                      break;
     case 0x61: op_adc( addrmode_zp_x_ind() );                   break;
     case 0x65: op_adc( addrmode_zp() );                         break;
@@ -650,6 +655,30 @@ void c6502::op_ldy(Addr addr) {
 
     ccSet( CC::Zero, regY==0 );
     ccSet( CC::Negative, regY & 0x80 );
+}
+
+void c6502::op_lsr(Addr addr) {
+    uint8_t val = read(addr);
+    write(addr, val);
+
+    ccSet( CC::Carry, val&0x01 );
+    val >>= 1;
+
+    ccSet( CC::Negative, val&0x80 );
+    ccSet( CC::Zero, val==0 );
+
+    write(addr, val);
+}
+
+void c6502::op_lsrA() {
+    read( pc() );
+
+    ccSet( CC::Carry, regA&0x01 );
+
+    regA >>= 1;
+
+    ccSet( CC::Negative, regA&0x80 );
+    ccSet( CC::Zero, regA==0 );
 }
 
 void c6502::op_nop(Addr addr) {

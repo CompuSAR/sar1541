@@ -107,6 +107,8 @@ private:
     void op_lda(Addr addr);
     void op_ldx(Addr addr);
     void op_ldy(Addr addr);
+    void op_lsr(Addr addr);
+    void op_lsrA();
     void op_nop(Addr addr);
     void op_ora(Addr addr);
     void op_pha(Addr addr);
