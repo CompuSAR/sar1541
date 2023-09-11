@@ -62,6 +62,7 @@ private:
     Addr addrmode_implicit();
     Addr addrmode_stack();
     Addr addrmode_zp();
+    Addr addrmode_zp_ind();
     Addr addrmode_zp_ind_y();
     Addr addrmode_zp_x();
     Addr addrmode_zp_x_ind();
@@ -87,6 +88,9 @@ private:
     void op_cld(Addr addr);
     void op_cli(Addr addr);
     void op_clv(Addr addr);
+    void op_cmp(Addr addr);
+    void op_cpx(Addr addr);
+    void op_cpy(Addr addr);
     void op_dex(Addr addr);
     void op_dey(Addr addr);
     void op_inx(Addr addr);
