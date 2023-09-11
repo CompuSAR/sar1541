@@ -67,6 +67,7 @@ private:
     Addr addrmode_zp_ind_y();
     Addr addrmode_zp_x();
     Addr addrmode_zp_x_ind();
+    Addr addrmode_zp_y();
     Addr addrmode_special();
 
 

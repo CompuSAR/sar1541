@@ -121,15 +121,23 @@ void c6502::handleInstruction() {
     case 0x9a: op_txs( addrmode_implicit() );                   break;
     case 0xa0: op_ldy( addrmode_immediate() );                  break;
     case 0xa2: op_ldx( addrmode_immediate() );                  break;
+    case 0xa4: op_ldy( addrmode_zp() );                         break;
     case 0xa5: op_lda( addrmode_zp() );                         break;
+    case 0xa6: op_ldx( addrmode_zp() );                         break;
     case 0xa9: op_lda( addrmode_immediate() );                  break;
+    case 0xac: op_ldy( addrmode_abs() );                        break;
     case 0xad: op_lda( addrmode_abs() );                        break;
+    case 0xae: op_ldx( addrmode_abs() );                        break;
     case 0xb0: op_bcs( addrmode_immediate() );                  break;
     case 0xb1: op_lda( addrmode_zp_ind_y() );                   break;
+    case 0xb4: op_ldy( addrmode_zp_x() );                       break;
     case 0xb5: op_lda( addrmode_zp_x() );                       break;
+    case 0xb6: op_ldx( addrmode_zp_y() );                       break;
     case 0xb8: op_clv( addrmode_implicit() );                   break;
     case 0xb9: op_lda( addrmode_abs_y() );                      break;
+    case 0xbc: op_ldy( addrmode_abs_x() );                      break;
     case 0xbd: op_lda( addrmode_abs_x() );                      break;
+    case 0xbe: op_ldx( addrmode_abs_y() );                      break;
     case 0xc0: op_cpy( addrmode_immediate() );                  break;
     case 0xc1: op_cmp( addrmode_zp_x_ind() );                   break;
     case 0xc4: op_cpy( addrmode_zp() );                         break;
@@ -354,6 +362,15 @@ Addr c6502::addrmode_zp_x_ind() {
     addr |= read(zp) << 8;
 
     return addr;
+}
+
+Addr c6502::addrmode_zp_y() {
+    uint8_t addr = read( pc() );
+    advance_pc();
+
+    read(addr);
+
+    return (addr + regY) & 0xff;
 }
 
 void c6502::branch_helper(Addr addr, bool jump) {
