@@ -45,6 +45,7 @@ void c6502::handleInstruction() {
     advance_pc();
 
     switch(current_opcode) {
+    case 0x00: op_brk( addrmode_zp() );                         break;
     case 0x01: op_ora( addrmode_zp_x_ind() );                   break;
     case 0x05: op_ora( addrmode_zp() );                         break;
     case 0x06: op_asl( addrmode_zp() );                         break;
@@ -403,6 +404,17 @@ void c6502::op_bpl(Addr addr) {
     branch_helper(addr, ! ccGet(CC::Negative));
 }
 
+
+void c6502::op_brk(Addr addr) {
+    write( compose( 0x01, regSp--), regPcH );
+    write( compose( 0x01, regSp--), regPcL );
+    write( compose( 0x01, regSp--), regStatus );
+
+    regPcL = read( 0xfffe );
+    regPcH = read( 0xffff );
+
+    ccSet( CC::IntMask, true );
+}
 
 void c6502::op_bvc(Addr addr) {
     branch_helper(addr, ! ccGet(CC::oVerflow));

@@ -80,6 +80,7 @@ private:
     void op_bmi(Addr addr);
     void op_bne(Addr addr);
     void op_bpl(Addr addr);
+    void op_brk(Addr addr);
     void op_bvc(Addr addr);
     void op_bvs(Addr addr);
     void op_clc(Addr addr);
