@@ -91,6 +91,8 @@ private:
     void op_cmp(Addr addr);
     void op_cpx(Addr addr);
     void op_cpy(Addr addr);
+    void op_dec(Addr addr);
+    void op_decA(Addr addr);
     void op_dex(Addr addr);
     void op_dey(Addr addr);
     void op_inx(Addr addr);

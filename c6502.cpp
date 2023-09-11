@@ -78,6 +78,7 @@ void c6502::handleInstruction() {
     case 0x35: op_and( addrmode_zp_x() );                       break;
     case 0x38: op_sec( addrmode_implicit() );                   break;
     case 0x39: op_and( addrmode_abs_y() );                      break;
+    case 0x3a: op_decA( addrmode_implicit() );                  break;
     case 0x3c: op_bit( addrmode_abs_x() );                      break;
     case 0x3d: op_and( addrmode_abs_x() );                      break;
     case 0x40: op_rti( addrmode_stack() );                      break;
@@ -122,18 +123,22 @@ void c6502::handleInstruction() {
     case 0xc1: op_cmp( addrmode_zp_x_ind() );                   break;
     case 0xc4: op_cpy( addrmode_zp() );                         break;
     case 0xc5: op_cmp( addrmode_zp() );                         break;
+    case 0xc6: op_dec( addrmode_zp() );                         break;
     case 0xc8: op_iny( addrmode_implicit() );                   break;
     case 0xc9: op_cmp( addrmode_immediate() );                  break;
     case 0xca: op_dex( addrmode_implicit() );                   break;
     case 0xcc: op_cpy( addrmode_abs() );                        break;
     case 0xcd: op_cmp( addrmode_abs() );                        break;
+    case 0xce: op_dec( addrmode_abs() );                        break;
     case 0xd0: op_bne( addrmode_immediate() );                  break;
     case 0xd1: op_cmp( addrmode_zp_ind_y() );                   break;
     case 0xd2: op_cmp( addrmode_zp_ind() );                     break;
     case 0xd5: op_cmp( addrmode_zp_x() );                       break;
+    case 0xd6: op_dec( addrmode_zp_x() );                       break;
     case 0xd8: op_cld( addrmode_implicit() );                   break;
     case 0xd9: op_cmp( addrmode_abs_y() );                      break;
     case 0xdd: op_cmp( addrmode_abs_x() );                      break;
+    case 0xde: op_dec( addrmode_abs_x() );                      break;
     case 0xe0: op_cpx( addrmode_immediate() );                  break;
     case 0xe1: op_sbc( addrmode_zp_x_ind() );                   break;
     case 0xe4: op_cpx( addrmode_zp() );                         break;
@@ -491,6 +496,24 @@ void c6502::op_cpy(Addr addr) {
     ccSet( CC::Negative, calc & 0x80 );
     ccSet( CC::Zero, (calc & 0xff) == 0 );
     ccSet( CC::Carry, calc & 0x100 );
+}
+
+void c6502::op_dec(Addr addr) {
+    uint8_t res = read(addr);
+    write(addr, res);
+
+    res--;
+    write(addr, res);
+
+    ccSet( CC::Negative, res&0x80 );
+    ccSet( CC::Zero, res==0 );
+}
+
+void c6502::op_decA(Addr addr) {
+    regX--;
+
+    ccSet( CC::Negative, regX & 0x80 );
+    ccSet( CC::Zero, regX==0 );
 }
 
 void c6502::op_dex(Addr addr) {
