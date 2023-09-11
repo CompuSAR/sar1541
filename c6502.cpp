@@ -129,7 +129,9 @@ void c6502::handleInstruction() {
     case 0xa4: op_ldy( addrmode_zp() );                         break;
     case 0xa5: op_lda( addrmode_zp() );                         break;
     case 0xa6: op_ldx( addrmode_zp() );                         break;
+    case 0xa8: op_tay();                                        break;
     case 0xa9: op_lda( addrmode_immediate() );                  break;
+    case 0xaa: op_tax();                                        break;
     case 0xac: op_ldy( addrmode_abs() );                        break;
     case 0xad: op_lda( addrmode_abs() );                        break;
     case 0xae: op_ldx( addrmode_abs() );                        break;
@@ -795,6 +797,24 @@ void c6502::op_stx(Addr addr) {
 
 void c6502::op_sty(Addr addr) {
     write( addr, regY );
+}
+
+void c6502::op_tax() {
+    read( pc() );
+
+    regX = regA;
+
+    ccSet( CC::Zero, regA==0 );
+    ccSet( CC::Negative, regA & 0x80 );
+}
+
+void c6502::op_tay() {
+    read( pc() );
+
+    regY = regA;
+
+    ccSet( CC::Zero, regA==0 );
+    ccSet( CC::Negative, regA & 0x80 );
 }
 
 void c6502::op_txa(Addr addr) {

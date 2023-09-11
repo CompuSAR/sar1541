@@ -125,6 +125,8 @@ private:
     void op_sta(Addr addr);
     void op_stx(Addr addr);
     void op_sty(Addr addr);
+    void op_tax();
+    void op_tay();
     void op_txa(Addr addr);
     void op_txs(Addr addr);
     void op_tya(Addr addr);
