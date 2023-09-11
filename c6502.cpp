@@ -63,17 +63,21 @@ void c6502::handleInstruction() {
     case 0x1e: op_asl( addrmode_abs_x(true) );                  break;
     case 0x20: op_jsr( addrmode_special() );                    break;
     case 0x21: op_and( addrmode_zp_x_ind() );                   break;
+    case 0x24: op_bit( addrmode_zp() );                         break;
     case 0x25: op_and( addrmode_zp() );                         break;
     case 0x26: op_rol( addrmode_zp() );                         break;
     case 0x28: op_plp( addrmode_stack() );                      break;
     case 0x29: op_and( addrmode_immediate() );                  break;
+    case 0x2c: op_bit( addrmode_abs() );                        break;
     case 0x2d: op_and( addrmode_abs() );                        break;
     case 0x2e: op_rol( addrmode_abs() );                        break;
     case 0x30: op_bmi( addrmode_immediate() );                  break;
     case 0x31: op_and( addrmode_zp_ind_y() );                   break;
+    case 0x34: op_bit( addrmode_zp_x() );                       break;
     case 0x35: op_and( addrmode_zp_x() );                       break;
     case 0x38: op_sec( addrmode_implicit() );                   break;
     case 0x39: op_and( addrmode_abs_y() );                      break;
+    case 0x3c: op_bit( addrmode_abs_x() );                      break;
     case 0x3d: op_and( addrmode_abs_x() );                      break;
     case 0x40: op_rti( addrmode_stack() );                      break;
     case 0x48: op_pha( addrmode_stack() );                      break;
@@ -94,6 +98,7 @@ void c6502::handleInstruction() {
     case 0x7d: op_adc( addrmode_abs_x() );                      break;
     case 0x85: op_sta( addrmode_zp() );                         break;
     case 0x88: op_dey( addrmode_implicit() );                   break;
+    case 0x89: op_bit( addrmode_immediate() );                  break;
     case 0x8a: op_txa( addrmode_implicit() );                   break;
     case 0x8c: op_sty( addrmode_abs() );                        break;
     case 0x8d: op_sta( addrmode_abs() );                        break;
@@ -375,6 +380,15 @@ void c6502::op_bcs(Addr addr) {
 
 void c6502::op_beq(Addr addr) {
     branch_helper(addr, ccGet(CC::Zero));
+}
+
+void c6502::op_bit(Addr addr) {
+    uint8_t mem = read(addr);
+    uint8_t result = regA ^ mem;
+
+    ccSet( CC::Negative, mem & 0x80 );
+    ccSet( CC::oVerflow, mem & 0x40 );
+    ccSet( CC::Zero, result==0 );
 }
 
 void c6502::op_bne(Addr addr) {

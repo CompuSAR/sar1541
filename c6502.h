@@ -76,6 +76,7 @@ private:
     void op_bcc(Addr addr);
     void op_bcs(Addr addr);
     void op_beq(Addr addr);
+    void op_bit(Addr addr);
     void op_bmi(Addr addr);
     void op_bne(Addr addr);
     void op_bpl(Addr addr);
