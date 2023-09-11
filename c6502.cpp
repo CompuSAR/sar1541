@@ -45,7 +45,7 @@ void c6502::handleInstruction() {
     advance_pc();
 
     switch(current_opcode) {
-    case 0x00: op_brk( addrmode_zp() );                         break;
+    case 0x00: op_brk( addrmode_immediate() );                  break;
     case 0x01: op_ora( addrmode_zp_x_ind() );                   break;
     case 0x05: op_ora( addrmode_zp() );                         break;
     case 0x06: op_asl( addrmode_zp() );                         break;
@@ -60,6 +60,7 @@ void c6502::handleInstruction() {
     case 0x16: op_asl( addrmode_zp_x() );                       break;
     case 0x18: op_clc( addrmode_implicit() );                   break;
     case 0x19: op_ora( addrmode_abs_y() );                      break;
+    case 0x1a: op_incA( addrmode_implicit() );                  break;
     case 0x1d: op_ora( addrmode_abs_x() );                      break;
     case 0x1e: op_asl( addrmode_abs_x(true) );                  break;
     case 0x20: op_jsr( addrmode_special() );                    break;
@@ -152,17 +153,21 @@ void c6502::handleInstruction() {
     case 0xe1: op_sbc( addrmode_zp_x_ind() );                   break;
     case 0xe4: op_cpx( addrmode_zp() );                         break;
     case 0xe5: op_sbc( addrmode_zp() );                         break;
+    case 0xe6: op_inc( addrmode_zp() );                         break;
     case 0xe8: op_inx( addrmode_implicit() );                   break;
     case 0xe9: op_sbc( addrmode_immediate() );                  break;
     case 0xea: op_nop( addrmode_implicit() );                   break;
     case 0xec: op_cpx( addrmode_abs() );                        break;
     case 0xed: op_sbc( addrmode_abs() );                        break;
+    case 0xee: op_inc( addrmode_abs() );                        break;
     case 0xf0: op_beq( addrmode_immediate() );                  break;
     case 0xf1: op_sbc( addrmode_zp_ind_y() );                   break;
     case 0xf5: op_sbc( addrmode_zp_x() );                       break;
+    case 0xf6: op_inc( addrmode_zp_x() );                       break;
     case 0xf8: op_sed( addrmode_implicit() );                   break;
     case 0xf9: op_sbc( addrmode_abs_y() );                      break;
     case 0xfd: op_sbc( addrmode_abs_x() );                      break;
+    case 0xfe: op_inc( addrmode_abs_x() );                      break;
     default: std::cerr<<"Unknown command "<<std::hex<<int(current_opcode)<<" at "<<(pc()-1)<<"\n"; abort();
     }
 }
@@ -446,6 +451,8 @@ void c6502::op_bpl(Addr addr) {
 
 
 void c6502::op_brk(Addr addr) {
+    read(addr);
+
     write( compose( 0x01, regSp--), regPcH );
     write( compose( 0x01, regSp--), regPcL );
     write( compose( 0x01, regSp--), regStatus );
@@ -541,6 +548,23 @@ void c6502::op_dey(Addr addr) {
 
 void c6502::op_eor(Addr addr) {
     regA ^= read(addr);
+
+    ccSet( CC::Negative, regA & 0x80 );
+    ccSet( CC::Zero, regA==0 );
+}
+
+void c6502::op_inc(Addr addr) {
+    uint8_t val = read(addr);
+
+    write(addr, val);
+    write(addr, ++val);
+
+    ccSet( CC::Negative, val & 0x80 );
+    ccSet( CC::Zero, val==0 );
+}
+
+void c6502::op_incA(Addr addr) {
+    regA++;
 
     ccSet( CC::Negative, regA & 0x80 );
     ccSet( CC::Zero, regA==0 );
