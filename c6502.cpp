@@ -70,6 +70,7 @@ void c6502::handleInstruction() {
     case 0x26: op_rol( addrmode_zp() );                         break;
     case 0x28: op_plp( addrmode_stack() );                      break;
     case 0x29: op_and( addrmode_immediate() );                  break;
+    case 0x2a: op_rolA();                                       break;
     case 0x2c: op_bit( addrmode_abs() );                        break;
     case 0x2d: op_and( addrmode_abs() );                        break;
     case 0x2e: op_rol( addrmode_abs() );                        break;
@@ -77,11 +78,13 @@ void c6502::handleInstruction() {
     case 0x31: op_and( addrmode_zp_ind_y() );                   break;
     case 0x34: op_bit( addrmode_zp_x() );                       break;
     case 0x35: op_and( addrmode_zp_x() );                       break;
+    case 0x36: op_rol( addrmode_zp_x() );                       break;
     case 0x38: op_sec( addrmode_implicit() );                   break;
     case 0x39: op_and( addrmode_abs_y() );                      break;
     case 0x3a: op_decA( addrmode_implicit() );                  break;
     case 0x3c: op_bit( addrmode_abs_x() );                      break;
     case 0x3d: op_and( addrmode_abs_x() );                      break;
+    case 0x3e: op_rol( addrmode_abs_x() );                      break;
     case 0x40: op_rti( addrmode_stack() );                      break;
     case 0x41: op_eor( addrmode_zp_x_ind() );                   break;
     case 0x45: op_eor( addrmode_zp() );                         break;
@@ -734,6 +737,19 @@ void c6502::op_rol(Addr addr) {
     ccSet( CC::Zero, (value&0xff)==0 );
 
     write( addr, value );
+}
+
+void c6502::op_rolA() {
+    read( pc() );
+
+    bool newC = regA & 0x80;
+    regA <<= 1;
+    if( ccGet( CC::Carry ) )
+        regA |= 0x01;
+
+    ccSet( CC::Carry, newC );
+    ccSet( CC::Negative, regA & 0x80 );
+    ccSet( CC::Zero, regA==0 );
 }
 
 void c6502::op_rti(Addr addr) {

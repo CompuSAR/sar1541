@@ -116,6 +116,7 @@ private:
     void op_pla(Addr addr);
     void op_plp(Addr addr);
     void op_rol(Addr addr);
+    void op_rolA();
     void op_rti(Addr addr);
     void op_rts(Addr addr);
     void op_sbc(Addr addr);
