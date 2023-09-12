@@ -84,7 +84,7 @@ void c6502::handleInstruction() {
     case 0x3a: op_decA( addrmode_implicit() );                  break;
     case 0x3c: op_bit( addrmode_abs_x() );                      break;
     case 0x3d: op_and( addrmode_abs_x() );                      break;
-    case 0x3e: op_rol( addrmode_abs_x() );                      break;
+    case 0x3e: op_rol( addrmode_abs_x(true) );                  break;
     case 0x40: op_rti( addrmode_stack() );                      break;
     case 0x41: op_eor( addrmode_zp_x_ind() );                   break;
     case 0x45: op_eor( addrmode_zp() );                         break;
@@ -107,16 +107,21 @@ void c6502::handleInstruction() {
     case 0x60: op_rts( addrmode_stack() );                      break;
     case 0x61: op_adc( addrmode_zp_x_ind() );                   break;
     case 0x65: op_adc( addrmode_zp() );                         break;
+    case 0x66: op_ror( addrmode_zp() );                         break;
     case 0x68: op_pla( addrmode_stack() );                      break;
     case 0x69: op_adc( addrmode_immediate() );                  break;
+    case 0x6a: op_rorA();                                       break;
     case 0x6c: op_jmp( addrmode_abs_ind() );                    break;
     case 0x6d: op_adc( addrmode_abs() );                        break;
+    case 0x6e: op_ror( addrmode_abs() );                        break;
     case 0x70: op_bvs( addrmode_immediate() );                  break;
     case 0x71: op_adc( addrmode_zp_ind_y() );                   break;
     case 0x75: op_adc( addrmode_zp_x() );                       break;
+    case 0x76: op_ror( addrmode_zp_x() );                       break;
     case 0x78: op_sei( addrmode_implicit() );                   break;
     case 0x79: op_adc( addrmode_abs_y() );                      break;
     case 0x7d: op_adc( addrmode_abs_x() );                      break;
+    case 0x7e: op_ror( addrmode_abs_x(true) );                  break;
     case 0x85: op_sta( addrmode_zp() );                         break;
     case 0x88: op_dey( addrmode_implicit() );                   break;
     case 0x89: op_bit( addrmode_immediate() );                  break;
@@ -723,6 +728,30 @@ void c6502::op_rolA() {
 
     ccSet( CC::Carry, newC );
     updateNZ( regA );
+}
+
+void c6502::op_ror(Addr addr) {
+    uint8_t value = read( addr );
+    write( addr, value );
+
+    bool newC = value & 0x01;
+    value >>= 1;
+    value |= ccGet( CC::Carry ) ? 0x80 : 0x00;
+    ccSet( CC::Carry, newC );
+    updateNZ( value );
+
+    write( addr, value );
+}
+
+void c6502::op_rorA() {
+    read( pc() );
+
+    bool newC = regA & 0x01;
+    regA >>= 1;
+    regA |= ccGet( CC::Carry ) ? 0x80 : 0x00;
+    ccSet( CC::Carry, newC );
+    updateNZ( regA );
+
 }
 
 void c6502::op_rti(Addr addr) {
