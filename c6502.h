@@ -131,4 +131,6 @@ private:
     void op_txa(Addr addr);
     void op_txs(Addr addr);
     void op_tya(Addr addr);
+
+    void updateNZ(uint8_t val);
 };

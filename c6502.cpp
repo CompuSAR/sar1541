@@ -414,16 +414,14 @@ void c6502::op_adc(Addr addr) {
 
     regA = val;
 
-    ccSet( CC::Zero, regA==0 );
     ccSet( CC::Carry, val & 0x100 );
-    ccSet( CC::Negative, val & 0x80 );
+    updateNZ( val );
 }
 
 void c6502::op_and(Addr addr) {
     regA &= read(addr);
 
-    ccSet( CC::Negative, regA & 0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 void c6502::op_asl(Addr addr) {
@@ -433,9 +431,7 @@ void c6502::op_asl(Addr addr) {
 
     ccSet( CC::Carry, val&0x100 );
 
-    val &= 0xff;
-    ccSet( CC::Negative, val&0x80 );
-    ccSet( CC::Zero, val==0 );
+    updateNZ( val );
 
     write(addr, val);
 }
@@ -449,9 +445,7 @@ void c6502::op_aslA() {
 
     ccSet( CC::Carry, val&0x100 );
 
-    val &= 0xff;
-    ccSet( CC::Negative, val&0x80 );
-    ccSet( CC::Zero, val==0 );
+    updateNZ( val );
 
     regA = val;
 }
@@ -531,17 +525,15 @@ void c6502::op_cmp(Addr addr) {
     uint16_t calc = 0x100 | regA;
     calc -= read(addr);
 
-    ccSet( CC::Negative, calc & 0x80 );
-    ccSet( CC::Zero, (calc & 0xff) == 0 );
     ccSet( CC::Carry, calc & 0x100 );
+    updateNZ( calc );
 }
 
 void c6502::op_cpx(Addr addr) {
     uint16_t calc = 0x100 | regX;
     calc -= read(addr);
 
-    ccSet( CC::Negative, calc & 0x80 );
-    ccSet( CC::Zero, (calc & 0xff) == 0 );
+    updateNZ( calc );
     ccSet( CC::Carry, calc & 0x100 );
 }
 
@@ -549,8 +541,7 @@ void c6502::op_cpy(Addr addr) {
     uint16_t calc = 0x100 | regY;
     calc -= read(addr);
 
-    ccSet( CC::Negative, calc & 0x80 );
-    ccSet( CC::Zero, (calc & 0xff) == 0 );
+    updateNZ( calc );
     ccSet( CC::Carry, calc & 0x100 );
 }
 
@@ -561,36 +552,31 @@ void c6502::op_dec(Addr addr) {
     res--;
     write(addr, res);
 
-    ccSet( CC::Negative, res&0x80 );
-    ccSet( CC::Zero, res==0 );
+    updateNZ( res );
 }
 
 void c6502::op_decA(Addr addr) {
     regX--;
 
-    ccSet( CC::Negative, regX & 0x80 );
-    ccSet( CC::Zero, regX==0 );
+    updateNZ( regX );
 }
 
 void c6502::op_dex(Addr addr) {
     regX--;
 
-    ccSet( CC::Negative, regX & 0x80 );
-    ccSet( CC::Zero, regX==0 );
+    updateNZ( regX );
 }
 
 void c6502::op_dey(Addr addr) {
     regY--;
 
-    ccSet( CC::Negative, regY & 0x80 );
-    ccSet( CC::Zero, regY==0 );
+    updateNZ( regY );
 }
 
 void c6502::op_eor(Addr addr) {
     regA ^= read(addr);
 
-    ccSet( CC::Negative, regA & 0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 void c6502::op_inc(Addr addr) {
@@ -599,29 +585,25 @@ void c6502::op_inc(Addr addr) {
     write(addr, val);
     write(addr, ++val);
 
-    ccSet( CC::Negative, val & 0x80 );
-    ccSet( CC::Zero, val==0 );
+    updateNZ( val );
 }
 
 void c6502::op_incA(Addr addr) {
     regA++;
 
-    ccSet( CC::Negative, regA & 0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 void c6502::op_inx(Addr addr) {
     regX++;
 
-    ccSet( CC::Negative, regX & 0x80 );
-    ccSet( CC::Zero, regX==0 );
+    updateNZ( regX );
 }
 
 void c6502::op_iny(Addr addr) {
     regY++;
 
-    ccSet( CC::Negative, regY & 0x80 );
-    ccSet( CC::Zero, regY==0 );
+    updateNZ( regY );
 }
 
 void c6502::op_jmp(Addr addr) {
@@ -644,22 +626,19 @@ void c6502::op_jsr(Addr addr) {
 void c6502::op_lda(Addr addr) {
     regA = read( addr );
 
-    ccSet( CC::Zero, regA==0 );
-    ccSet( CC::Negative, regA & 0x80 );
+    updateNZ( regA );
 }
 
 void c6502::op_ldx(Addr addr) {
     regX = read( addr );
 
-    ccSet( CC::Zero, regX==0 );
-    ccSet( CC::Negative, regX & 0x80 );
+    updateNZ( regX );
 }
 
 void c6502::op_ldy(Addr addr) {
     regY = read( addr );
 
-    ccSet( CC::Zero, regY==0 );
-    ccSet( CC::Negative, regY & 0x80 );
+    updateNZ( regY );
 }
 
 void c6502::op_lsr(Addr addr) {
@@ -669,8 +648,7 @@ void c6502::op_lsr(Addr addr) {
     ccSet( CC::Carry, val&0x01 );
     val >>= 1;
 
-    ccSet( CC::Negative, val&0x80 );
-    ccSet( CC::Zero, val==0 );
+    updateNZ( val );
 
     write(addr, val);
 }
@@ -682,8 +660,7 @@ void c6502::op_lsrA() {
 
     regA >>= 1;
 
-    ccSet( CC::Negative, regA&0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 void c6502::op_nop(Addr addr) {
@@ -692,8 +669,7 @@ void c6502::op_nop(Addr addr) {
 void c6502::op_ora(Addr addr) {
     regA |= read(addr);
 
-    ccSet( CC::Negative, regA & 0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 
@@ -715,8 +691,7 @@ void c6502::op_pla(Addr addr) {
     regSp++;
     regA = read( compose( 0x01, regSp ) );
 
-    ccSet( CC::Negative, regA & 0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 void c6502::op_plp(Addr addr) {
@@ -733,8 +708,7 @@ void c6502::op_rol(Addr addr) {
     value <<= 1;
     value |= ccGet( CC::Carry );
     ccSet( CC::Carry, value & 0x100 );
-    ccSet( CC::Negative, value & 0x80 );
-    ccSet( CC::Zero, (value&0xff)==0 );
+    updateNZ( value );
 
     write( addr, value );
 }
@@ -748,8 +722,7 @@ void c6502::op_rolA() {
         regA |= 0x01;
 
     ccSet( CC::Carry, newC );
-    ccSet( CC::Negative, regA & 0x80 );
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
 }
 
 void c6502::op_rti(Addr addr) {
@@ -786,9 +759,8 @@ void c6502::op_sbc(Addr addr) {
 
     ccSet( CC::oVerflow, !sameSign && stillSameSign );
 
-    ccSet( CC::Zero, regA==0 );
+    updateNZ( regA );
     ccSet( CC::Carry, (res & 0x100)==0 );
-    ccSet( CC::Negative, res & 0x80 );
 }
 
 void c6502::op_sec(Addr addr) {
@@ -820,8 +792,7 @@ void c6502::op_tax() {
 
     regX = regA;
 
-    ccSet( CC::Zero, regA==0 );
-    ccSet( CC::Negative, regA & 0x80 );
+    updateNZ( regA );
 }
 
 void c6502::op_tay() {
@@ -829,24 +800,26 @@ void c6502::op_tay() {
 
     regY = regA;
 
-    ccSet( CC::Zero, regA==0 );
-    ccSet( CC::Negative, regA & 0x80 );
+    updateNZ( regA );
 }
 
 void c6502::op_txa(Addr addr) {
     regA = regX;
 
-    ccSet( CC::Zero, regA==0 );
-    ccSet( CC::Negative, regA & 0x80 );
+    updateNZ( regA );
 }
 
 void c6502::op_tya(Addr addr) {
     regA = regY;
 
-    ccSet( CC::Zero, regA==0 );
-    ccSet( CC::Negative, regA & 0x80 );
+    updateNZ( regA );
 }
 
 void c6502::op_txs(Addr addr) {
     regSp = regX;
+}
+
+void c6502::updateNZ(uint8_t val) {
+    ccSet( CC::Negative, val & 0x80 );
+    ccSet( CC::Zero, val == 0 );
 }
