@@ -130,9 +130,10 @@ private:
     void op_sty(Addr addr);
     void op_tax();
     void op_tay();
-    void op_txa(Addr addr);
-    void op_txs(Addr addr);
-    void op_tya(Addr addr);
+    void op_tsx();
+    void op_txa();
+    void op_txs();
+    void op_tya();
 
     void updateNZ(uint8_t val);
 };

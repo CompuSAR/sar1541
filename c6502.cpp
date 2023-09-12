@@ -128,7 +128,7 @@ void c6502::handleInstruction() {
     case 0x86: op_stx( addrmode_zp() );                         break;
     case 0x88: op_dey( addrmode_implicit() );                   break;
     case 0x89: op_bit( addrmode_immediate() );                  break;
-    case 0x8a: op_txa( addrmode_implicit() );                   break;
+    case 0x8a: op_txa();                                        break;
     case 0x8c: op_sty( addrmode_abs() );                        break;
     case 0x8d: op_sta( addrmode_abs() );                        break;
     case 0x8e: op_stx( addrmode_abs() );                        break;
@@ -138,9 +138,9 @@ void c6502::handleInstruction() {
     case 0x94: op_sty( addrmode_zp_x() );                       break;
     case 0x95: op_sta( addrmode_zp_x() );                       break;
     case 0x96: op_stx( addrmode_zp_y() );                       break;
-    case 0x98: op_tya( addrmode_implicit() );                   break;
+    case 0x98: op_tya();                                        break;
     case 0x99: op_sta( addrmode_abs_y(true) );                  break;
-    case 0x9a: op_txs( addrmode_implicit() );                   break;
+    case 0x9a: op_txs();                                        break;
     case 0x9d: op_sta( addrmode_abs_x(true) );                  break;
     case 0xa0: op_ldy( addrmode_immediate() );                  break;
     case 0xa2: op_ldx( addrmode_immediate() );                  break;
@@ -160,6 +160,7 @@ void c6502::handleInstruction() {
     case 0xb6: op_ldx( addrmode_zp_y() );                       break;
     case 0xb8: op_clv( addrmode_implicit() );                   break;
     case 0xb9: op_lda( addrmode_abs_y() );                      break;
+    case 0xba: op_tsx();                                        break;
     case 0xbc: op_ldy( addrmode_abs_x() );                      break;
     case 0xbd: op_lda( addrmode_abs_x() );                      break;
     case 0xbe: op_ldx( addrmode_abs_y() );                      break;
@@ -842,20 +843,35 @@ void c6502::op_tay() {
     updateNZ( regA );
 }
 
-void c6502::op_txa(Addr addr) {
+void c6502::op_tsx() {
+    read( pc() );
+
+    regX = regSp;
+
+    updateNZ( regX );
+}
+
+
+void c6502::op_txa() {
+    read( pc() );
+
     regA = regX;
 
     updateNZ( regA );
 }
 
-void c6502::op_tya(Addr addr) {
+void c6502::op_txs() {
+    read( pc() );
+
+    regSp = regX;
+}
+
+void c6502::op_tya() {
+    read( pc() );
+
     regA = regY;
 
     updateNZ( regA );
-}
-
-void c6502::op_txs(Addr addr) {
-    regSp = regX;
 }
 
 void c6502::updateNZ(uint8_t val) {
