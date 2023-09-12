@@ -123,6 +123,7 @@ void c6502::handleInstruction() {
     case 0x7d: op_adc( addrmode_abs_x() );                      break;
     case 0x7e: op_ror( addrmode_abs_x(true) );                  break;
     case 0x81: op_sta( addrmode_zp_x_ind() );                   break;
+    case 0x84: op_sty( addrmode_zp() );                         break;
     case 0x85: op_sta( addrmode_zp() );                         break;
     case 0x86: op_stx( addrmode_zp() );                         break;
     case 0x88: op_dey( addrmode_implicit() );                   break;
@@ -134,6 +135,7 @@ void c6502::handleInstruction() {
     case 0x90: op_bcc( addrmode_immediate() );                  break;
     case 0x91: op_sta( addrmode_zp_ind_y(true) );               break;
     case 0x92: op_sta( addrmode_zp_ind() );                     break;
+    case 0x94: op_sty( addrmode_zp_x() );                       break;
     case 0x95: op_sta( addrmode_zp_x() );                       break;
     case 0x96: op_stx( addrmode_zp_y() );                       break;
     case 0x98: op_tya( addrmode_implicit() );                   break;
