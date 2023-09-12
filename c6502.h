@@ -58,13 +58,13 @@ private:
     Addr addrmode_abs();
     Addr addrmode_abs_ind();
     Addr addrmode_abs_x(bool always_waste_cycle = false);
-    Addr addrmode_abs_y();
+    Addr addrmode_abs_y(bool always_waste_cycle = false);
     Addr addrmode_immediate();
     Addr addrmode_implicit();
     Addr addrmode_stack();
     Addr addrmode_zp();
     Addr addrmode_zp_ind();
-    Addr addrmode_zp_ind_y();
+    Addr addrmode_zp_ind_y(bool always_waste_cycle = false);
     Addr addrmode_zp_x();
     Addr addrmode_zp_x_ind();
     Addr addrmode_zp_y();

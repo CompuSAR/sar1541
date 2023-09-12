@@ -122,6 +122,7 @@ void c6502::handleInstruction() {
     case 0x79: op_adc( addrmode_abs_y() );                      break;
     case 0x7d: op_adc( addrmode_abs_x() );                      break;
     case 0x7e: op_ror( addrmode_abs_x(true) );                  break;
+    case 0x81: op_sta( addrmode_zp_x_ind() );                   break;
     case 0x85: op_sta( addrmode_zp() );                         break;
     case 0x88: op_dey( addrmode_implicit() );                   break;
     case 0x89: op_bit( addrmode_immediate() );                  break;
@@ -130,8 +131,13 @@ void c6502::handleInstruction() {
     case 0x8d: op_sta( addrmode_abs() );                        break;
     case 0x8e: op_stx( addrmode_abs() );                        break;
     case 0x90: op_bcc( addrmode_immediate() );                  break;
+    case 0x91: op_sta( addrmode_zp_ind_y(true) );               break;
+    case 0x92: op_sta( addrmode_zp_ind() );                     break;
+    case 0x95: op_sta( addrmode_zp_x() );                       break;
     case 0x98: op_tya( addrmode_implicit() );                   break;
+    case 0x99: op_sta( addrmode_abs_y(true) );                  break;
     case 0x9a: op_txs( addrmode_implicit() );                   break;
+    case 0x9d: op_sta( addrmode_abs_x(true) );                  break;
     case 0xa0: op_ldy( addrmode_immediate() );                  break;
     case 0xa2: op_ldx( addrmode_immediate() );                  break;
     case 0xa4: op_ldy( addrmode_zp() );                         break;
@@ -281,14 +287,14 @@ Addr c6502::addrmode_abs_x(bool always_waste_cycle) {
     return resL + resH;
 }
 
-Addr c6502::addrmode_abs_y() {
+Addr c6502::addrmode_abs_y(bool always_waste_cycle) {
     Addr resL = read( pc() );
     advance_pc();
     Addr resH = read( pc() ) << 8;
     resL += regY;
     advance_pc();
 
-    if( resL>>8 != 0 ) {
+    if( always_waste_cycle || resL>>8 != 0 ) {
         read( compose( resH>>8, resL&0xff ) );
     }
 
@@ -336,7 +342,7 @@ Addr c6502::addrmode_zp_ind() {
     return res_lsb + res_msb*256;
 }
 
-Addr c6502::addrmode_zp_ind_y() {
+Addr c6502::addrmode_zp_ind_y(bool always_waste_cycle) {
     uint8_t addr = read( pc() );
     advance_pc();
 
@@ -345,7 +351,7 @@ Addr c6502::addrmode_zp_ind_y() {
     res_lsb += regY;
     Addr res_msb = read( (addr+1) & 0xff );
 
-    if( res_lsb>>8 != 0 ) {
+    if( always_waste_cycle || res_lsb>>8 != 0 ) {
         read( compose( res_msb, res_lsb&0xff ) );
     }
 
