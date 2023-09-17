@@ -8,6 +8,9 @@ class c6502 {
     class CpuReset {};
 
     Bus &bus_;
+
+    enum class DelayedOps { None, SEI, CLI } delayed_ops = DelayedOps::None;
+
     uint8_t regA, regX, regY;
     uint8_t regSp;
     uint8_t regStatus = 0xff;
@@ -51,6 +54,7 @@ private:
     uint8_t ccGet( CC cc ) const;
     void ccSet( CC cc, bool value );
 
+    void handleIrq();
 
     void branch_helper(Addr addr, bool jump);
 

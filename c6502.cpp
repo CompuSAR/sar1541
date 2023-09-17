@@ -41,7 +41,18 @@ void c6502::setSo(bool state) {
 
 
 void c6502::handleInstruction() {
+    if( irq ) {
+        handleIrq();
+    }
+
+    if( delayed_ops!=DelayedOps::None ) {
+        ccSet(CC::IntMask, delayed_ops==DelayedOps::SEI);
+
+        delayed_ops = DelayedOps::None;
+    }
+
     current_opcode = read( pc(), true );
+
     advance_pc();
 
     switch(current_opcode) {
@@ -254,6 +265,23 @@ void c6502::ccSet( CC cc, bool value ) {
     } else {
         regStatus &= ~( 1<<int(cc) );
     }
+}
+
+void c6502::handleIrq() {
+    if( ccGet( CC::IntMask ) )
+        return;
+
+    read( pc() );
+    read( pc() );
+
+    write( compose( 0x01, regSp-- ), regPcH );
+    write( compose( 0x01, regSp-- ), regPcL );
+    write( compose( 0x01, regSp-- ), regStatus & 0xef );
+
+    ccSet( CC::IntMask, true );
+
+    regPcL = read( 0xfffe );
+    regPcH = read( 0xffff );
 }
 
 // Address modes
@@ -503,9 +531,9 @@ void c6502::op_bpl(Addr addr) {
 void c6502::op_brk(Addr addr) {
     read(addr);
 
-    write( compose( 0x01, regSp--), regPcH );
-    write( compose( 0x01, regSp--), regPcL );
-    write( compose( 0x01, regSp--), regStatus );
+    write( compose(0x01, regSp--), regPcH );
+    write( compose(0x01, regSp--), regPcL );
+    write( compose(0x01, regSp--), regStatus );
 
     regPcL = read( 0xfffe );
     regPcH = read( 0xffff );
@@ -530,7 +558,7 @@ void c6502::op_cld(Addr addr) {
 }
 
 void c6502::op_cli(Addr addr) {
-    ccSet( CC::IntMask, false );
+    delayed_ops = DelayedOps::CLI;
 }
 
 void c6502::op_clv(Addr addr) {
@@ -812,7 +840,7 @@ void c6502::op_sed(Addr addr) {
 }
 
 void c6502::op_sei(Addr addr) {
-    ccSet( CC::IntMask, true );
+    delayed_ops = DelayedOps::SEI;
 }
 
 void c6502::op_sta(Addr addr) {

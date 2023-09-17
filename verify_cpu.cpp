@@ -5,6 +5,8 @@
 #include "c6502.h"
 
 #include <assert.h>
+#include <unordered_map>
+#include <unordered_set>
 
 class TestBus : public Bus {
     static constexpr size_t StartGraceCycles = 50;
@@ -14,6 +16,12 @@ class TestBus : public Bus {
     size_t              cycles_until_start = StartGraceCycles;
     bool                cpuInReset = true;
     size_t              cycle_num = 0;
+
+    enum class Signals {
+        ReadyOn, ReadyOff, SoOn, SoOff, NmiOn, NmiOff, ResetOn, ResetOff, IrqOn, IrqOff
+    };
+
+    std::unordered_map< size_t, std::unordered_set< Signals > > delayed_actions;
 
 
 public:
@@ -26,7 +34,9 @@ public:
     }
 
     virtual uint8_t read( c6502 *cpu, Addr address, bool sync = false ) override {
-        uint8_t ret = memory[address]; 
+        perform_io(cpu);
+
+        uint8_t ret = memory[address];
         if( cycles_until_start>0 ) {
             if( StartGraceCycles-cycles_until_start == 2 ) {
                 cpu->setReset(false);
@@ -59,6 +69,8 @@ public:
         return ret;
     }
     virtual void write( c6502 *cpu, Addr address, uint8_t value ) override {
+        perform_io(cpu);
+
         std::cout<<std::dec<<cycle_num<<" W: "<<std::hex<<address<<" "<<int(value)<<"\n";
         cycle_num++;
 
@@ -70,6 +82,34 @@ public:
         }
 
         memory[address] = value;
+
+        if( (address>>8) == 0x02 ) {
+            switch( address & 0xff ) {
+            case 0x00:
+                // Test done
+                break;
+            case 0x81:
+                delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::ReadyOn);
+                delayed_actions.try_emplace( cycle_num+value+memory[0x280] ).first->second.emplace(Signals::ReadyOff);
+                break;
+            case 0x83:
+                delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::SoOn);
+                delayed_actions.try_emplace( cycle_num+value+memory[0x282] ).first->second.emplace(Signals::SoOff);
+                break;
+            case 0xfb:
+                delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::NmiOn);
+                delayed_actions.try_emplace( cycle_num+value+memory[0x2fa] ).first->second.emplace(Signals::NmiOff);
+                break;
+            case 0xfd:
+                delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::ResetOn);
+                delayed_actions.try_emplace( cycle_num+value+memory[0x2fc] ).first->second.emplace(Signals::ResetOff);
+                break;
+            case 0xff:
+                delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::IrqOn);
+                delayed_actions.try_emplace( cycle_num+value+memory[0x2fe] ).first->second.emplace(Signals::IrqOff);
+                break;
+            }
+        }
     }
 
 private:
@@ -87,6 +127,49 @@ private:
                 ": "<<message<<" Expected "<<std::hex<<expected<<" got "<<actual<<
                 " @"<<address<<" data "<<int(data)<<"\n";
         abort();
+    }
+
+    void perform_io(c6502 *cpu) {
+        auto action_iter = delayed_actions.find( cycle_num );
+        if( action_iter==delayed_actions.end() )
+            return;
+
+        for( auto action : action_iter->second ) {
+            switch( action ) {
+            case Signals::ReadyOn:
+                cpu->setReady(true);
+                break;
+            case Signals::ReadyOff:
+                cpu->setReady(false);
+                break;
+            case Signals::SoOn:
+                cpu->setSo(true);
+                break;
+            case Signals::SoOff:
+                cpu->setSo(false);
+                break;
+            case Signals::NmiOn:
+                cpu->setNmi(true);
+                break;
+            case Signals::NmiOff:
+                cpu->setNmi(false);
+                break;
+            case Signals::ResetOn:
+                cpu->setReset(true);
+                break;
+            case Signals::ResetOff:
+                cpu->setReset(false);
+                break;
+            case Signals::IrqOn:
+                cpu->setIrq(true);
+                break;
+            case Signals::IrqOff:
+                cpu->setIrq(false);
+                break;
+            }
+        }
+
+        delayed_actions.erase( action_iter );
     }
 };
 
