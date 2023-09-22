@@ -1,3 +1,2 @@
 .*.swp
-*.o
-/verify_cpu
+/build*

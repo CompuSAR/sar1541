@@ -7,9 +7,9 @@
 class c6502 {
     class CpuReset {};
 
-    Bus &bus_;
-
     enum class DelayedOps { None, SEI, CLI } delayed_ops = DelayedOps::None;
+
+    Bus &bus_;
 
     uint8_t regA, regX, regY;
     uint8_t regSp;
