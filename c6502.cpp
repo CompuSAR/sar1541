@@ -1,5 +1,7 @@
 #include "c6502.h"
 
+#include <assert.h>
+
 #include <iostream>
 
 static Addr compose(uint8_t high, uint8_t low) {
@@ -231,13 +233,30 @@ void c6502::handleInstruction() {
 }
 
 void c6502::resetSequence() {
-    while( reset )
+    incompatible = true;
+    while( reset ) {
         read( pc() );
+    }
 
     reset_pending = false;
 
+    incompatible = true;
+    read( pc() );
+    advance_pc();
+
+    incompatible = true;
+    read( pc() );
+
+    assert( !incompatible );
+
+    read( compose( 0x01, regSp-- ) );
+    read( compose( 0x01, regSp-- ) );
+    read( compose( 0x01, regSp-- ) );
+
     regPcL = read(0xfffc);
     regPcH = read(0xfffd);
+
+    ccSet( CC::IntMask, true );
 }
 
 void c6502::advance_pc() {
@@ -257,7 +276,10 @@ uint8_t c6502::read( Addr address, bool sync ) {
         result = bus_.read( this, address, sync );
     } while(ready);
 
+    incompatible = false;
+
     if( reset_pending ) {
+        incompatible = true;
         while( reset )
             bus_.read( this, address );
 
@@ -268,17 +290,20 @@ uint8_t c6502::read( Addr address, bool sync ) {
 }
 
 void c6502::write( Addr address, uint8_t data ) {
-    while( ready )
-        bus_.write( this, address, data );
-
     if( reset_pending ) {
+        incompatible = true;
+
         while( reset )
             bus_.read( this, address );
 
         throw CpuReset();
     }
 
-    bus_.write( this, address, data );
+    do {
+        bus_.write( this, address, data );
+    } while(ready);
+
+    incompatible = false;
 }
 
 

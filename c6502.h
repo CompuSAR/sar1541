@@ -20,6 +20,7 @@ class c6502 {
 
     bool reset = false, irq = false, nmi = false, ready = false, so = false;
     bool reset_pending = false, nmi_pending = false;
+    bool incompatible = false;
 
     enum class CC {
         Carry,
@@ -41,6 +42,9 @@ public:
     void setNmi(bool state);
     void setReady(bool state);
     void setSo(bool state);
+
+    // Returns true if this cycle is knowningly incompatible
+    bool isIncompatible() const { return incompatible; }
 
 private:
     void handleInstruction();

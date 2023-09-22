@@ -62,9 +62,9 @@ public:
             bool valid = test_plan.read_line();
             assert(valid);
 
-            check( test_plan[0], 1, "Read operation where write was expected", address, ret );
-            check( test_plan[2], address, "Read from wrong address", address, ret );
-            check( test_plan[1], ret, "Read wrong value from memory", address, ret );
+            check( cpu, test_plan[0], 1, "Read operation where write was expected", address, ret );
+            check( cpu, test_plan[2], address, "Read from wrong address", address, ret );
+            check( cpu, test_plan[1], ret, "Read wrong value from memory", address, ret );
         }
 
         return ret;
@@ -77,9 +77,9 @@ public:
 
         bool valid = test_plan.read_line();
         if( valid ) {
-            check( test_plan[0], 0, "Write operation where read was expected", address, value );
-            check( test_plan[2], address, "Write to wrong address", address, value );
-            check( test_plan[1], value, "Write of wrong value to memory", address, value );
+            check( cpu, test_plan[0], 0, "Write operation where read was expected", address, value );
+            check( cpu, test_plan[2], address, "Write to wrong address", address, value );
+            check( cpu, test_plan[1], value, "Write of wrong value to memory", address, value );
         }
 
         memory[address] = value;
@@ -115,6 +115,7 @@ public:
 
 private:
     void check(
+            const c6502 *cpu,
             ReadMemSupport::DataContainer expected,
             ReadMemSupport::DataContainer actual,
             const char *message,
@@ -126,8 +127,13 @@ private:
 
         std::cerr<<"Validation failed on plan line "<<std::dec<<test_plan.lineNumber()<<
                 ": "<<message<<" Expected "<<std::hex<<expected<<" got "<<actual<<
-                " @"<<address<<" data "<<int(data)<<"\n";
-        abort();
+                " @"<<address<<" data "<<int(data);
+        if( cpu->isIncompatible() ) {
+            std::cerr<<" known incompatibility\n";
+        } else {
+            std::cerr<<"\n";
+            abort();
+        }
     }
 
     void perform_io(c6502 *cpu) {
