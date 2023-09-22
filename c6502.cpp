@@ -9,7 +9,7 @@ static Addr compose(uint8_t high, uint8_t low) {
 void c6502::runCpu() {
     while(true) {
         try {
-            if( reset )
+            if( reset_pending )
                 resetSequence();
             else
                 handleInstruction();
@@ -20,6 +20,9 @@ void c6502::runCpu() {
 
 void c6502::setReset(bool state) {
     reset = state;
+    if( state )
+        reset_pending = true;
+
     std::cout<<"CPU reset "<<state<<"\n";
 }
 void c6502::setIrq(bool state) {
@@ -27,6 +30,9 @@ void c6502::setIrq(bool state) {
     std::cout<<"CPU IRQ "<<state<<"\n";
 }
 void c6502::setNmi(bool state) {
+    if( !nmi && state )
+        nmi_pending = true;
+
     nmi = state;
     std::cout<<"CPU NMI "<<state<<"\n";
 }
@@ -35,12 +41,18 @@ void c6502::setReady(bool state) {
     std::cout<<"CPU ready "<<state<<"\n";
 }
 void c6502::setSo(bool state) {
+    if( !so && state )
+        ccSet( CC::oVerflow, true );
     so = state;
     std::cout<<"CPU SO "<<state<<"\n";
 }
 
 
 void c6502::handleInstruction() {
+    if( nmi_pending ) {
+        handleNmi();
+    }
+
     if( irq ) {
         handleIrq();
     }
@@ -219,6 +231,11 @@ void c6502::handleInstruction() {
 }
 
 void c6502::resetSequence() {
+    while( reset )
+        read( pc() );
+
+    reset_pending = false;
+
     regPcL = read(0xfffc);
     regPcH = read(0xfffd);
 }
@@ -235,9 +252,15 @@ Addr c6502::pc() const {
 }
 
 uint8_t c6502::read( Addr address, bool sync ) {
-    uint8_t result = bus_.read( this, address, sync );
+    uint8_t result;
+    do {
+        result = bus_.read( this, address, sync );
+    } while(ready);
 
-    if( reset ) {
+    if( reset_pending ) {
+        while( reset )
+            bus_.read( this, address );
+
         throw CpuReset();
     }
 
@@ -245,8 +268,12 @@ uint8_t c6502::read( Addr address, bool sync ) {
 }
 
 void c6502::write( Addr address, uint8_t data ) {
-    if( reset ) {
-        bus_.read( this, address );
+    while( ready )
+        bus_.write( this, address, data );
+
+    if( reset_pending ) {
+        while( reset )
+            bus_.read( this, address );
 
         throw CpuReset();
     }
@@ -265,6 +292,22 @@ void c6502::ccSet( CC cc, bool value ) {
     } else {
         regStatus &= ~( 1<<int(cc) );
     }
+}
+
+void c6502::handleNmi() {
+    nmi_pending = false;
+
+    read( pc() );
+    read( pc() );
+
+    write( compose( 0x01, regSp-- ), regPcH );
+    write( compose( 0x01, regSp-- ), regPcL );
+    write( compose( 0x01, regSp-- ), regStatus & 0xef );
+
+    ccSet( CC::IntMask, true );
+
+    regPcL = read( 0xfffa );
+    regPcH = read( 0xfffb );
 }
 
 void c6502::handleIrq() {

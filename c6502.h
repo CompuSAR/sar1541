@@ -19,6 +19,7 @@ class c6502 {
     uint8_t current_opcode;
 
     bool reset = false, irq = false, nmi = false, ready = false, so = false;
+    bool reset_pending = false, nmi_pending = false;
 
     enum class CC {
         Carry,
@@ -54,6 +55,7 @@ private:
     uint8_t ccGet( CC cc ) const;
     void ccSet( CC cc, bool value );
 
+    void handleNmi();
     void handleIrq();
 
     void branch_helper(Addr addr, bool jump);

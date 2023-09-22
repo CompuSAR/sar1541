@@ -37,6 +37,7 @@ public:
         perform_io(cpu);
 
         uint8_t ret = memory[address];
+
         if( cycles_until_start>0 ) {
             if( StartGraceCycles-cycles_until_start == 2 ) {
                 cpu->setReset(false);
@@ -89,8 +90,8 @@ public:
                 // Test done
                 break;
             case 0x81:
-                delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::ReadyOn);
-                delayed_actions.try_emplace( cycle_num+value+memory[0x280] ).first->second.emplace(Signals::ReadyOff);
+                delayed_actions.try_emplace( cycle_num+value-1 ).first->second.emplace(Signals::ReadyOn);
+                delayed_actions.try_emplace( cycle_num+value-1+memory[0x280] ).first->second.emplace(Signals::ReadyOff);
                 break;
             case 0x83:
                 delayed_actions.try_emplace( cycle_num+value ).first->second.emplace(Signals::SoOn);
