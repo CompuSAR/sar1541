@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+class TestDone {};
+
 class TestBus : public Bus {
     static constexpr size_t StartGraceCycles = 50;
 
@@ -87,7 +89,7 @@ public:
         if( (address>>8) == 0x02 ) {
             switch( address & 0xff ) {
             case 0x00:
-                // Test done
+                throw TestDone();
                 break;
             case 0x81:
                 delayed_actions.try_emplace( cycle_num+value-1 ).first->second.emplace(Signals::ReadyOn);
@@ -187,5 +189,10 @@ int main(int argc, char *argv[]) {
 
     cpu.setReset(true);
 
-    cpu.runCpu();
+    try {
+        cpu.runCpu();
+    } catch(TestDone ex) {
+    }
+
+    std::cout<<"Test finished successfully\n";
 }
