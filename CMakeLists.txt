@@ -7,5 +7,5 @@ set(TH_DIR ../test_harness/perfect6502)
 
 include_directories(${TH_DIR})
 
-add_executable(verify_cpu c6502.cpp verify_cpu.cpp ${TH_DIR}/readmem.cpp)
+add_executable(verify_cpu c6502.cpp mos6522.cpp verify_cpu.cpp ${TH_DIR}/readmem.cpp)
 set_property(TARGET verify_cpu PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
